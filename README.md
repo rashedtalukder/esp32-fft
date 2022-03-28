@@ -1,12 +1,27 @@
-ESP32 FFT
+ESP-IDF FFT Component
 =========
 
-This provides a vanilla radix-2 FFT out-of-place implementation and a test example.
+This [fork](https://github.com/fakufaku/esp32-fft) provides an ESP-IDF component that can be independently used 
+in a project as a component and easily consumed and added to a code pipeline via git submodules. 
+
+This library provides a vanilla radix-2 FFT APIs that can be incorporated into your project.
 
 Author
 ------
 
 This code was written by [Robin Scheibler](http://www.robinscheibler.org) during rainy days in October 2017.
+
+Cloning into your project
+-------
+
+This repo should be placed in the **components** directory of your ESP-IDF project. To clone it via git submodule, 
+
+1. Go to the **components** directory.
+2. Enter the following command:
+    ```
+    git submodule add https://github.com/rashedtalukder/esp32-fft.git
+    ```
+
 
 Example
 -------
