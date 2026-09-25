@@ -54,10 +54,15 @@ fft_config_t *fft_init(int size, fft_type_t type, fft_direction_t direction, flo
    */
   int k,m;
 
-  fft_config_t *config = (fft_config_t *)malloc(sizeof(fft_config_t));
-
   // Check if the size is a power of two
-  if ((size & (size-1)) != 0)  // tests if size is a power of two
+  if (size <= 0 || (size & (size-1)) != 0)  // tests if size is a power of two
+    return NULL;
+  if (type != FFT_REAL && type != FFT_COMPLEX)
+    return NULL;
+
+  // calloc keeps every pointer NULL so fft_destroy() can undo a partial init
+  fft_config_t *config = (fft_config_t *)calloc(1, sizeof(fft_config_t));
+  if (config == NULL)
     return NULL;
 
   // start configuration
@@ -68,6 +73,11 @@ fft_config_t *fft_init(int size, fft_type_t type, fft_direction_t direction, flo
 
   // Allocate and precompute twiddle factors
   config->twiddle_factors = (float *)malloc(2 * config->size * sizeof(float));
+  if (config->twiddle_factors == NULL)
+  {
+    fft_destroy(config);
+    return NULL;
+  }
 
   float two_pi_by_n = TWO_PI / config->size;
 
@@ -77,37 +87,37 @@ fft_config_t *fft_init(int size, fft_type_t type, fft_direction_t direction, flo
     config->twiddle_factors[m+1] = sinf(two_pi_by_n * k);  // imag
   }
 
+  size_t buffer_floats = (config->type == FFT_REAL ? 1 : 2) * config->size;
+
   // Allocate input buffer
   if (input != NULL)
     config->input = input;
   else 
   {
-    if (config->type == FFT_REAL)
-      config->input = (float *)malloc(config->size * sizeof(float));
-    else if (config->type == FFT_COMPLEX)
-      config->input = (float *)malloc(2 * config->size * sizeof(float));
-
+    config->input = (float *)malloc(buffer_floats * sizeof(float));
     config->flags |= FFT_OWN_INPUT_MEM;
   }
 
   if (config->input == NULL)
+  {
+    fft_destroy(config);
     return NULL;
+  }
 
   // Allocate output buffer
   if (output != NULL)
     config->output = output;
   else
   {
-    if (config->type == FFT_REAL)
-      config->output = (float *)malloc(config->size * sizeof(float));
-    else if (config->type == FFT_COMPLEX)
-      config->output = (float *)malloc(2 * config->size * sizeof(float));
-
+    config->output = (float *)malloc(buffer_floats * sizeof(float));
     config->flags |= FFT_OWN_OUTPUT_MEM;
   }
 
   if (config->output == NULL)
+  {
+    fft_destroy(config);
     return NULL;
+  }
 
   return config;
 }
